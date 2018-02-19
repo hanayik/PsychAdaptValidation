@@ -220,11 +220,11 @@ upperCI = b+(z(2)*stats.se);
 lowerCI = b-(z(2)*stats.se);
 pa.test.upperGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(upperCI(1))) / upperCI(2);
 pa.test.lowerGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(lowerCI(1))) / lowerCI(2);
-if pa.test.upperGuess > pa.test.max
-    pa.test.upperGuess = pa.test.max;
+if pa.test.upperGuess < pa.test.min
+    pa.test.upperGuess = pa.test.min;
 end
-if pa.test.lowerGuess < pa.test.min
-    pa.test.lowerGuess = pa.test.min;
+if pa.test.lowerGuess > pa.test.max
+    pa.test.lowerGuess = pa.test.max;
 end
 lowerGuess = pa.test.lowerGuess;
 upperGuess = pa.test.upperGuess;
@@ -235,8 +235,8 @@ upperGuess = pa.test.upperGuess;
 % R = linspace(pa.test.upperGuess,pa.test.lowerGuess,pa.train.probeLength);
 % harderStims = R(R<pa.test.threshGuess);
 % easierStims = R(R>pa.test.threshGuess);
-easierStims = linspace(pa.test.lowerGuess,pa.test.threshGuess,CIspread);
-harderStims = linspace(pa.test.threshGuess,pa.test.upperGuess,CIspread);
+%easierStims = linspace(pa.test.lowerGuess,pa.test.threshGuess,CIspread);
+%harderStims = linspace(pa.test.threshGuess,pa.test.upperGuess,CIspread);
 
 if pa.test.testAcc < pa.test.targetAcc
     pa.test.stimVal = lowerGuess + (threshGuess-lowerGuess).*rand(1,1);

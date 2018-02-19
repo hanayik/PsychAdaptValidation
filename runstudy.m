@@ -1,29 +1,5 @@
 function CatchError = runstudy(sub,runtype)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%              Scan order: t1, fmri1, fmri2
-%
-% the training will last ~6min and will present each task,
-% simulaneity, orientation, and color, so that the participant can
-% titrate down to at or near their threshold using our PEST algorithms.
-%
-% Trial timing:
-% 
-% stim duration:        500 ms
-% response time:        1100 ms
-% max trial time:       1800 ms (about 200 ms ISI built into trial, will catch lag)
-% 
-% num. blocks T1:       3 (for initial adaptation to task)
-% num. trials T1:       40
-%
-% task text/block:      1000 ms * 18
-% num. blocks fMRI-1:   18 (6 blocks x 3 tasks)
-% num. blocks fMRI-2:   18 (6 blocks x 3 tasks)
-% num. trials/block:    16 (can't do less than 16 for property balancing reasons)
-% task block duration:  28.8 s (1.8 * 16)
-% rest between blocks:  15 s (900 frames @ 60 Hz)
-% num. rest blocks:     num. fMRI blocks + 1 (start with rest)
-% fMRI run duration:    ((18*28.8)+(19*15)+18)/60 = 13.69 min (13 min, 41.4 sec)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 CatchError = 0; %for error handling, default to "0" exit code
 KbName('UnifyKeyNames');
@@ -33,7 +9,7 @@ if IsOSX
 else
     Screen('Preference', 'SkipSyncTests', 0);
 end
-if ~isnumeric(sub) %make sure sub and runnum are numbers and not strings
+if ~isnumeric(sub)
     error('The given SUBJECT value is not a number, please provide an integer number!');
 end
 [datapth] = fileparts(mfilename('fullpath')); %get path of this mfile
@@ -73,27 +49,6 @@ try %Use try catch loops for elegant error handling with PTB
     %rectSize = xplaces(3) - xplaces(1)-(rectPad*2);
     posXs = [params.maxXpixels*0.35 params.maxXpixels*0.5 params.maxXpixels*0.65];%X positions for the stimuli
     posYs = [params.maxYpixels*0.5 params.maxYpixels*0.5];%Y positions for the stimuli
-    %%%%%%
-    %{
-    xCenter = params.Xc;
-    yCenter = params.Yc;
-    %theta = 0 : 0.01 : 2*pi;
-    rectSize = params.maxXpixels*0.1;
-    radius = rectSize*.75;
-    rotateFactor = 180;
-    xTop = radius * cos(deg2rad(90-rotateFactor)) + xCenter;
-    yTop = radius * sin(deg2rad(90-rotateFactor)) + yCenter;
-    xL = radius * cos(deg2rad(210-rotateFactor)) + xCenter;
-    yL = radius * sin(deg2rad(210-rotateFactor)) + yCenter;
-    xR = radius * cos(deg2rad(330-rotateFactor)) + xCenter;
-    yR = radius * sin(deg2rad(330-rotateFactor)) + yCenter;
-    posXs = [xL xTop xR];
-    posYs = [yL yTop yR];
-    %}
-    %plot(radius * cos(deg2rad(0+90)) + xCenter,radius * sin(deg2rad(0+90)) + yCenter,'k*');
-    %plot(radius * cos(deg2rad(120+90)) + xCenter,radius * sin(deg2rad(120+90)) + yCenter,'k*');
-    %plot(radius * cos(deg2rad(60-90)) + xCenter,radius * sin(deg2rad(60-90)) + yCenter,'k*');
-    %%%%%
     rectSize = round((posXs(3) - posXs(1))-rectPad);
     baseRect = [0 0 rectSize rectSize]; %make a PTB rect var
     s.angles = [0 0];%%IMPORTANT
@@ -178,7 +133,7 @@ try %Use try catch loops for elegant error handling with PTB
         s.TO = psychAdapt('computeThreshold', 'model', l.s.TO);
     end
     if ~strcmpi(runtype,'train') %if any run but the t1 scan (initial titration)
-        s.nblockseach = 3;
+        s.nblockseach = 5;
         vals = {'SJ','CL','OR','TO'}; 
         s.tasks = [];
         for i = 1:s.nblockseach
@@ -190,8 +145,8 @@ try %Use try catch loops for elegant error handling with PTB
         s.ntrials = s.trainTrials;
         s.nblocks = 4;
     end
-    instruct1 = sprintf('For this part of the experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on your current task.\n\nSometimes you will make decisions about TIME\n\nand other times you will make decisions\n\nabout the COLOR or ANGLE of the shapes.\n\nYour decision will be one of two options\n\nSAME or DIFFERENT.\n\nPress your index finger button for SAME\n\nand your middle finger button for DIFFERENT.\n\nPress the index finger button now to continue.');
-    instruct2 = sprintf('During the experiment the task\n\nmay change from one block to the next.\n\nTo indicate your task, there will be\n\n the word TIME, COLOR, or ANGLE\n\ndisplayed on the screen for 1 second\n\n after each rest period. Keep in\n\n mind that the timing, color, and angle\n\nof each rectangle may be different\n\nor the same, but you must focus only on the\n\nproperty indicated by your task.\n\nPress the middle finger button to begin.');
+    instruct1 = sprintf('For this experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on your current task.\n\nSometimes you will make decisions about TIME\n\nand other times you will make decisions\n\nabout the COLOR or ANGLE of the shapes.\n\nYour decision will be one of two options\n\nSAME/DIFFERENT, or LEFT/RIGHT.\n\nPress the 2 button for SAME/LEFT\n\nand the 3 button for DIFFERENT/RIGHT.\n\nPress the 2 button now to continue.');
+    instruct2 = sprintf('During the experiment the task\n\nmay change from time to time.\n\nTo indicate your task, there will be\n\n the word TIME, ORDER, COLOR, or ANGLE\n\ndisplayed on the screen for 1 second\n\n after each rest period.\n\nPress the 3 button to begin.');
     ShowInstructions(instruct1,'2@');
     ShowInstructions(instruct2,'3#');
     s.expStartTime = WaitForScannerStart;
@@ -365,7 +320,20 @@ try %Use try catch loops for elegant error handling with PTB
         save(subFile,'s');%save 's' structure
         %draw central fixation dot in back buffer
         %Screen('DrawDots', params.win, [params.Xc params.Yc], params.dotSize ,params.colors.black, [], params.dotType);
-        DrawFormattedText(params.win,'Press space bar when you are ready to continue', 'center', 'center');
+        if b+1 <= s.nblocks
+            if strcmpi(s.tasks{b+1},'CL')
+                breakText = sprintf('The next task will be SAME/DIFFERENT judgements about COLORS\n\nPress 2 for SAME and 3 for DIFFERENT\n\nPress the space bar when you are ready to continue');
+            elseif strcmpi(s.tasks{b+1},'OR')
+                breakText = sprintf('The next task will be SAME/DIFFERENT judgements about ANGLES\n\nPress 2 for SAME and 3 for DIFFERENT\n\nPress the space bar when you are ready to continue');
+            elseif strcmpi(s.tasks{b+1},'SJ')
+                breakText = sprintf('The next task will be SAME/DIFFERENT judgements about TIME\n\nPress 2 for SAME and 3 for DIFFERENT\n\nPress the space bar when you are ready to continue');
+            elseif strcmpi(s.tasks{b+1},'TO')
+                breakText = sprintf('The next task will be LEFT/RIGHT judgements about TIME\n\nPress 2 if LEFT was first and 3 if RIGHT was first\n\nPress the space bar when you are ready to continue');
+            end
+        else
+            breakText = sprintf('All done!\n\nPress the space bar to exit');
+        end
+        DrawFormattedText(params.win,breakText, 'center', 'center');
         s.RestStart(b) = Screen('Flip', params.win);
         RestrictKeysForKbCheck(KbName('space'));
         KbWait;
