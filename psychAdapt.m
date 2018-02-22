@@ -46,6 +46,10 @@ switch cmd
         pa.train.stimVal = pa.train.threshGuess;
         pa.stimVal = pa.train.stimVal;
         pa.test.betaVals = [];
+        pa.train.name = 'psychAdapt';
+        pa.test.name = 'psychAdapt';
+        pa.train.name = cell2mat(varargin(find(strcmp(varargin, 'nasdfdsme'))+1));
+        pa.test.name = cell2mat(varargin(find(strcmp(varargin, 'name'))+1));
     case 'train'
         pa                   = cell2mat(varargin(find(strcmp(varargin, 'model'))+1));
         pa.train.trialIdx    = pa.train.trialIdx + 1;
@@ -95,6 +99,7 @@ switch cmd
         figure;
         %plot(stimVals(I), acc(I)./n,'o',stimVals(I),yfits./n,'-','LineWidth',2, threshGuess,pa.train.targetAcc,'*');
         plot(stimVals(I), acc(I)./n,'o',stimVals(I),yfits./n,'-','LineWidth',2);
+        title(pa.train.name);
         hold on;
         plot(threshGuess,pa.train.targetAcc,'*k');
         x = [threshGuess threshGuess];
@@ -138,6 +143,7 @@ switch cmd
         threshGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(b(1))) / b(2);
         figure;
         plot(stimVals(I), acc(I)./n,'o',stimVals(I),yfits./n,'-','LineWidth',2);
+        title(pa.test.name);
         hold on;
         plot(threshGuess,pa.test.targetAcc,'*k');
         if CI >0.5
