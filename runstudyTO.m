@@ -1,4 +1,4 @@
-function CatchError = runstudy()
+function CatchError = runstudyTO()
 prompt = {'Participant:','  train  or  test:'};
 dlg_title = 'Participant info';
 num_lines = 1;
@@ -20,7 +20,7 @@ datadir = fullfile(datapth,'data'); %construct data'dir' path
 if ~exist(datadir,'dir'); mkdir(datadir); end; %make data directory if it's not there
 subdir = fullfile(datadir,['sub_' subjectString]);
 if ~exist(subdir,'dir'); mkdir(subdir); end;
-subFile = fullfile(subdir,['sub_' subjectString '_' runtype '.mat']);
+subFile = fullfile(subdir,['sub_' subjectString '_' runtype 'TO' '.mat']);
 
 
 try %Use try catch loops for elegant error handling with PTB
@@ -78,58 +78,32 @@ try %Use try catch loops for elegant error handling with PTB
     % For psychAdapt:
     %SJ
     targetAcc = 0.75;
-    sj_threshGuess = 0.2;
-    sj_minVal = 0.01;
-    sj_maxVal = 0.49; %sj comparison value is set to 0.5, so cant go above that
-    %OR
-    or_threshGuess = 4;
-    or_minVal = 0.1;
-    or_maxVal = 10;
-    %CL
-    cl_threshGuess = 0.01;
-    cl_minVal = 0.001;
-    cl_maxVal = 0.2;
+    to_threshGuess = 0.2;
+    to_minVal = 0.01;
+    to_maxVal = 0.49;
     if strcmpi(runtype,'train')
         s.trainTrials = 32;
         s.nRestFrames = 300-1;
         %instruct1 = sprintf('For this part of the experiment you will\nsee two rectangles on the screen and\nyou will make decisions based on your current task.\nSometimes you will make decisions about TIME\nand other times you will make decisions\nabout the COLOR or ANGLE of the rectangles.\nYour decision will be one of two options\nSAME or DIFFERENT.\nPress your thumb button for SAME\nand your index finger button for DIFFERENT.\nPress the thumb button now to continue.');
         %instruct2 = sprintf('During the experiment the task\nmay change from one block to the next.\nTo indicate your task, there will be\n the word TIME, COLOR, or ANGLE\ndisplayed on the screen for 1 second\n after each rest period. Keep in\n mind that the timing, color, and angle\nof each rectangle may be different\nor the same, but you must focus only on the\nproperty indicated by your task.\nPress the index finger button to begin.');
         s.task = {};
-        s.tasks = {'SJ','OR','CL'}; %do all 3 tasks for initial titration
-        s.SJ = psychAdapt('setup',...
+        s.tasks = {'TO'}; %do all 3 tasks for initial titration
+        s.TO = psychAdapt('setup',...
             'targetAcc', targetAcc,...
-            'threshGuess', sj_threshGuess,...
-            'min', sj_minVal,...
-            'max', sj_maxVal,...
+            'threshGuess', to_threshGuess,...
+            'min', to_minVal,...
+            'max', to_maxVal,...
             'probeLength', s.trainTrials,...
-            'name', 'SJ');
-        s.CL = psychAdapt('setup',...
-            'targetAcc', targetAcc,...
-            'threshGuess', cl_threshGuess,...
-            'min', cl_minVal,...
-            'max', cl_maxVal,...
-            'probeLength', s.trainTrials,...
-            'name', 'CL');
-        s.OR = psychAdapt('setup',...
-            'targetAcc', targetAcc,...
-            'threshGuess', or_threshGuess,...
-            'min', or_minVal,...
-            'max', or_maxVal,...
-            'probeLength', s.trainTrials,...
-            'name', 'OR');
+            'name', 'TO');
         
     elseif strcmpi(runtype,'test')
         s.nRestFrames = 300-1;
-        l = load(fullfile(subdir,['sub_' subjectString '_train.mat']));
-        %s.SJ = l.s.SJ;
-        s.SJ = psychAdapt('computeThreshold', 'model', l.s.SJ);
-        s.CL = psychAdapt('computeThreshold', 'model', l.s.CL);
-        s.OR = psychAdapt('computeThreshold', 'model', l.s.OR);
+        l = load(fullfile(subdir,['sub_' subjectString '_trainTO.mat']));
         s.TO = psychAdapt('computeThreshold', 'model', l.s.TO);
     end
     if ~strcmpi(runtype,'train') %if any run but the t1 scan (initial titration)
         s.nblockseach = 5;
-        vals = {'SJ','CL','OR'}; 
+        vals = {'TO'}; 
         s.tasks = [];
         for i = 1:s.nblockseach
             s.tasks = [s.tasks repmat(vals(randperm(size(vals,2))),1,1)];
@@ -140,8 +114,8 @@ try %Use try catch loops for elegant error handling with PTB
         s.ntrials = s.trainTrials;
         s.nblocks = 4;
     end
-    instruct1 = sprintf('For this experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on your current task.\n\nSometimes you will make decisions about TIME\n\nand other times you will make decisions\n\nabout the COLOR or ANGLE of the shapes.\n\nYour decision will be one of two options: SAME or DIFFERENT\n\nPress the 2 button for SAME\n\nand the 3 button for DIFFERENT.\n\nPress the 2 button now to continue.');
-    instruct2 = sprintf('During the experiment the task\n\nmay change from time to time.\n\nTo indicate your task, there will be\n\n the word TIME, COLOR, or ANGLE\n\ndisplayed on the screen for 1 second\n\n after each rest period.\n\nPress the 3 button to begin.');
+    instruct1 = sprintf('For this experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on their order in time.\n\nYour decision will be one of two options: LEFT or RIGHT\n\nPress the 2 button if you saw the LEFT shape first\n\nand the 3 button if you saw the RIGHT shape first.\n\nPress the 2 button now to continue.');
+    instruct2 = sprintf('Press the 3 button to begin.');
     ShowInstructions(instruct1,'2@');
     ShowInstructions(instruct2,'3#');
     s.expStartTime = WaitForScannerStart;
@@ -324,7 +298,7 @@ try %Use try catch loops for elegant error handling with PTB
             elseif strcmpi(s.tasks{b+1},'SJ')
                 breakText = sprintf('The next task will be SAME/DIFFERENT judgements about TIME\n\nPress 2 for SAME and 3 for DIFFERENT\n\nPress the space bar when you are ready to continue');
             elseif strcmpi(s.tasks{b+1},'TO')
-                breakText = sprintf('The next task will be LEFT/RIGHT judgements about TIME\n\nPress 2 if LEFT was first and 3 if RIGHT was first\n\nPress the space bar when you are ready to continue');
+                breakText = sprintf('Break screen\n\nPress the space bar when you are ready to continue');
             end
         else
             breakText = sprintf('All done!\n\nPress the space bar to exit');
@@ -350,14 +324,10 @@ try %Use try catch loops for elegant error handling with PTB
     % Clear the screen
     CleanUp;
     if strcmpi(runtype,'train')
-        psychAdapt('plotTraining','model',s.SJ);
-        psychAdapt('plotTraining','model',s.OR);
-        psychAdapt('plotTraining','model',s.CL);
+        psychAdapt('plotTraining','model',s.TO);
     elseif strcmpi(runtype,'test')
-        psychAdapt('plotTesting','model',s.SJ);
-        psychAdapt('plotTesting','model',s.OR);
-        psychAdapt('plotTesting','model',s.CL);
-        disp(sprintf('\n\n** Accuracies **\n\nSJ: %2.2f, CL: %2.2f, OR: %2.2f', s.SJ.test.testAcc, s.CL.test.testAcc, s.OR.test.testAcc));
+        psychAdapt('plotTesting','model',s.TO);
+        disp(sprintf('\n\n** Accuracies **\n\nTO: %2.2f', s.TO.test.testAcc));
     end
     
     
