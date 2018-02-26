@@ -79,7 +79,7 @@ try %Use try catch loops for elegant error handling with PTB
     %SJ
     targetAcc = 0.75;
     to_threshGuess = 0.2;
-    to_minVal = 0.01;
+    to_minVal = 0.1;
     to_maxVal = 0.49;
     if strcmpi(runtype,'train')
         s.trainTrials = 32;
@@ -112,7 +112,7 @@ try %Use try catch loops for elegant error handling with PTB
         s.ntrials = 16;%trials per block, ntrials must be even
     else %else, do 32 trials of each task
         s.ntrials = s.trainTrials;
-        s.nblocks = 4;
+        s.nblocks = 1;
     end
     instruct1 = sprintf('For this experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on their order in time.\n\nYour decision will be one of two options: LEFT or RIGHT\n\nPress the 2 button if you saw the LEFT shape first\n\nand the 3 button if you saw the RIGHT shape first.\n\nPress the 2 button now to continue.');
     instruct2 = sprintf('Press the 3 button to begin.');
@@ -291,13 +291,7 @@ try %Use try catch loops for elegant error handling with PTB
         %draw central fixation dot in back buffer
         %Screen('DrawDots', params.win, [params.Xc params.Yc], params.dotSize ,params.colors.black, [], params.dotType);
         if b+1 <= s.nblocks
-            if strcmpi(s.tasks{b+1},'CL')
-                breakText = sprintf('The next task will be SAME/DIFFERENT judgements about COLORS\n\nPress 2 for SAME and 3 for DIFFERENT\n\nPress the space bar when you are ready to continue');
-            elseif strcmpi(s.tasks{b+1},'OR')
-                breakText = sprintf('The next task will be SAME/DIFFERENT judgements about ANGLES\n\nPress 2 for SAME and 3 for DIFFERENT\n\nPress the space bar when you are ready to continue');
-            elseif strcmpi(s.tasks{b+1},'SJ')
-                breakText = sprintf('The next task will be SAME/DIFFERENT judgements about TIME\n\nPress 2 for SAME and 3 for DIFFERENT\n\nPress the space bar when you are ready to continue');
-            elseif strcmpi(s.tasks{b+1},'TO')
+            if strcmpi(s.tasks{b},'TO')
                 breakText = sprintf('Break screen\n\nPress the space bar when you are ready to continue');
             end
         else

@@ -125,7 +125,6 @@ try %Use try catch loops for elegant error handling with PTB
         s.SJ = psychAdapt('computeThreshold', 'model', l.s.SJ);
         s.CL = psychAdapt('computeThreshold', 'model', l.s.CL);
         s.OR = psychAdapt('computeThreshold', 'model', l.s.OR);
-        s.TO = psychAdapt('computeThreshold', 'model', l.s.TO);
     end
     if ~strcmpi(runtype,'train') %if any run but the t1 scan (initial titration)
         s.nblockseach = 5;
@@ -138,7 +137,7 @@ try %Use try catch loops for elegant error handling with PTB
         s.ntrials = 16;%trials per block, ntrials must be even
     else %else, do 32 trials of each task
         s.ntrials = s.trainTrials;
-        s.nblocks = 4;
+        s.nblocks = 3;
     end
     instruct1 = sprintf('For this experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on your current task.\n\nSometimes you will make decisions about TIME\n\nand other times you will make decisions\n\nabout the COLOR or ANGLE of the shapes.\n\nYour decision will be one of two options: SAME or DIFFERENT\n\nPress the 2 button for SAME\n\nand the 3 button for DIFFERENT.\n\nPress the 2 button now to continue.');
     instruct2 = sprintf('During the experiment the task\n\nmay change from time to time.\n\nTo indicate your task, there will be\n\n the word TIME, COLOR, or ANGLE\n\ndisplayed on the screen for 1 second\n\n after each rest period.\n\nPress the 3 button to begin.');

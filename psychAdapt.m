@@ -245,12 +245,12 @@ upperGuess = pa.test.upperGuess;
 %harderStims = linspace(pa.test.threshGuess,pa.test.upperGuess,CIspread);
 
 if pa.test.testAcc < pa.test.targetAcc
-    pa.test.stimVal = lowerGuess + (threshGuess-lowerGuess).*rand(1,1);
-    %pa.test.stimVal = pa.test.lowerGuess;
+    %pa.test.stimVal = lowerGuess + (threshGuess-lowerGuess).*rand(1,1);
+    pa.test.stimVal = pa.test.lowerGuess;
     %pa.test.stimVal = easierStims(randi([1 length(easierStims)]));
 else
-    pa.test.stimVal = threshGuess + (upperGuess-threshGuess).*rand(1,1);
-    %pa.test.stimVal = pa.test.upperGuess;
+    %pa.test.stimVal = threshGuess + (upperGuess-threshGuess).*rand(1,1);
+    pa.test.stimVal = pa.test.upperGuess;
     %pa.test.stimVal = harderStims(randi([1 length(harderStims)]));
 end
 if pa.test.stimVal > pa.test.max
