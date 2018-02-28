@@ -112,8 +112,10 @@ switch cmd
         
     case 'plotTesting' %includes data from training plot too!
         pa = cell2mat(varargin(find(strcmp(varargin, 'model'))+1));
-        testingFactor = 10;
-        CI = 0.95;
+        targetAcc = pa.test.targetAcc;
+        missW = targetAcc; %taret acc can't be less than .50
+        hitW = 1-targetAcc;
+        trainW = 0;
         trainAcc = pa.train.acc;
         testAcc = pa.test.acc;
         allAcc = [trainAcc testAcc]; 
@@ -124,11 +126,11 @@ switch cmd
         allVals = [trainVals testVals];
         testMiss = find(testAcc == 0);
         testHit = find(testAcc == 1);
-        testW = sqrt(1:length(testAcc))+testingFactor;
-        %testW = ones(size(testAcc));
-        %testW(testMiss) = hitWeightFactor;
-        %testW(testHit) = hitWeightFactor;
-        w = [ones(size(trainVals)) testW];
+        %testW = sqrt(1:length(testAcc))+testingFactor;
+        testW = zeros(size(testAcc));
+        testW(testMiss) = missW;
+        testW(testHit) = hitW;
+        w = [zeros(size(trainVals))+trainW testW];
         w = w';
         %w = ones(size(allAcc));
         %allVals = [testVals];
@@ -189,7 +191,7 @@ function pa = updateTestingModel(pa)
 targetAcc = pa.test.targetAcc;
 missW = targetAcc; %taret acc can't be less than .50
 hitW = 1-targetAcc;
-trainW = 0.5;
+trainW = 0;
 CI = 0.95;
 CIspread = 5;
 testingFactor = 0;
