@@ -116,6 +116,7 @@ switch cmd
         missW = targetAcc; %taret acc can't be less than .50
         hitW = 1-targetAcc;
         trainW = 0;
+        CI = 0.95;
         trainAcc = pa.train.acc;
         testAcc = pa.test.acc;
         allAcc = [trainAcc testAcc]; 
@@ -166,6 +167,12 @@ switch cmd
         plot(stimVals(lowerI),yfitsLower./n,'b:','LineWidth',2);
         upperGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(upperCI(1))) / upperCI(2);
         lowerGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(lowerCI(1))) / lowerCI(2);
+        if upperGuess < pa.test.min
+            upperGuess = pa.test.min;
+        end
+        if lowerGuess > pa.test.max
+            lowerGuess = pa.test.max;
+        end
         plot(upperGuess,pa.test.targetAcc,'*k');
         plot(lowerGuess,pa.test.targetAcc,'*k');
         x = [threshGuess threshGuess];
