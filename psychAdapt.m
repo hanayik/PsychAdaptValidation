@@ -48,7 +48,7 @@ switch cmd
         pa.test.betaVals = [];
         pa.train.name = 'psychAdapt';
         pa.test.name = 'psychAdapt';
-        pa.train.name = cell2mat(varargin(find(strcmp(varargin, 'nasdfdsme'))+1));
+        pa.train.name = cell2mat(varargin(find(strcmp(varargin, 'name'))+1));
         pa.test.name = cell2mat(varargin(find(strcmp(varargin, 'name'))+1));
     case 'train'
         pa                   = cell2mat(varargin(find(strcmp(varargin, 'model'))+1));

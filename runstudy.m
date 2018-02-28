@@ -28,7 +28,7 @@ try %Use try catch loops for elegant error handling with PTB
     s.nRestFrames = 900-1; % THIS IS FOR RUNNING SUBJECTS
     %s.nRestFrames = 300-1; %for testing on myself
     s.respTimeOut = 1.1;
-    s.maxTrialSecs = 2;
+    s.maxTrialSecs = 1.8;
     s.trimTime = 0;
     s.redColor = [.8 0 0];
     s.grnColor = [0 .8 0];
@@ -47,9 +47,9 @@ try %Use try catch loops for elegant error handling with PTB
     %HideCursor(params.screen);
     Screen('TextSize', params.win, 28);
     xplaces = linspace(0, params.maxXpixels,5);
-    rectPad = 200;
+    rectPad = 300;
     %rectSize = xplaces(3) - xplaces(1)-(rectPad*2);
-    posXs = [params.maxXpixels*0.35 params.maxXpixels*0.5 params.maxXpixels*0.65];%X positions for the stimuli
+    posXs = [params.maxXpixels*0.3 params.maxXpixels*0.5 params.maxXpixels*0.7];%X positions for the stimuli
     posYs = [params.maxYpixels*0.5 params.maxYpixels*0.5];%Y positions for the stimuli
     rectSize = round((posXs(3) - posXs(1))-rectPad);
     baseRect = [0 0 rectSize rectSize]; %make a PTB rect var
@@ -57,7 +57,7 @@ try %Use try catch loops for elegant error handling with PTB
     s.SOA = 1;%%IMPORTANT
     s.angleMin = -90;
     s.angleMax = 90;
-    params.stimDur = 45; %30 frames = 500 msec
+    params.stimDur = 30; %30 frames = 500 msec
     params.dotType = 2;%fixation dot type
     params.dotSize = 10;%size of circle
     params.dotdur = 15;%duration of fixation alone, at beginning of trials
@@ -82,20 +82,16 @@ try %Use try catch loops for elegant error handling with PTB
     sj_minVal = 0.01;
     sj_maxVal = 0.49; %sj comparison value is set to 0.5, so cant go above that
     %OR
-    or_threshGuess = 4;
+    or_threshGuess = 3;
     or_minVal = 0.1;
-    or_maxVal = 10;
-    %CL
-    cl_threshGuess = 0.01;
-    cl_minVal = 0.001;
-    cl_maxVal = 0.2;
+    or_maxVal = 6;
     if strcmpi(runtype,'train')
         s.trainTrials = 32;
         s.nRestFrames = 300-1;
         %instruct1 = sprintf('For this part of the experiment you will\nsee two rectangles on the screen and\nyou will make decisions based on your current task.\nSometimes you will make decisions about TIME\nand other times you will make decisions\nabout the COLOR or ANGLE of the rectangles.\nYour decision will be one of two options\nSAME or DIFFERENT.\nPress your thumb button for SAME\nand your index finger button for DIFFERENT.\nPress the thumb button now to continue.');
         %instruct2 = sprintf('During the experiment the task\nmay change from one block to the next.\nTo indicate your task, there will be\n the word TIME, COLOR, or ANGLE\ndisplayed on the screen for 1 second\n after each rest period. Keep in\n mind that the timing, color, and angle\nof each rectangle may be different\nor the same, but you must focus only on the\nproperty indicated by your task.\nPress the index finger button to begin.');
         s.task = {};
-        s.tasks = {'SJ','OR','CL'}; %do all 3 tasks for initial titration
+        s.tasks = {'SJ','OR'}; %do all 3 tasks for initial titration
         s.SJ = psychAdapt('setup',...
             'targetAcc', targetAcc,...
             'threshGuess', sj_threshGuess,...
@@ -103,13 +99,6 @@ try %Use try catch loops for elegant error handling with PTB
             'max', sj_maxVal,...
             'probeLength', s.trainTrials,...
             'name', 'SJ');
-        s.CL = psychAdapt('setup',...
-            'targetAcc', targetAcc,...
-            'threshGuess', cl_threshGuess,...
-            'min', cl_minVal,...
-            'max', cl_maxVal,...
-            'probeLength', s.trainTrials,...
-            'name', 'CL');
         s.OR = psychAdapt('setup',...
             'targetAcc', targetAcc,...
             'threshGuess', or_threshGuess,...
@@ -123,24 +112,23 @@ try %Use try catch loops for elegant error handling with PTB
         l = load(fullfile(subdir,['sub_' subjectString '_train.mat']));
         %s.SJ = l.s.SJ;
         s.SJ = psychAdapt('computeThreshold', 'model', l.s.SJ);
-        s.CL = psychAdapt('computeThreshold', 'model', l.s.CL);
         s.OR = psychAdapt('computeThreshold', 'model', l.s.OR);
     end
     if ~strcmpi(runtype,'train') %if any run but the t1 scan (initial titration)
         s.nblockseach = 5;
-        vals = {'SJ','CL','OR'}; 
+        vals = {'SJ','OR'}; 
         s.tasks = [];
         for i = 1:s.nblockseach
             s.tasks = [s.tasks repmat(vals(randperm(size(vals,2))),1,1)];
         end
         s.nblocks = length(s.tasks);
-        s.ntrials = 16;%trials per block, ntrials must be even
+        s.ntrials = 32;%trials per block, ntrials must be even
     else %else, do 32 trials of each task
         s.ntrials = s.trainTrials;
-        s.nblocks = 3;
+        s.nblocks = 2;
     end
-    instruct1 = sprintf('For this experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on your current task.\n\nSometimes you will make decisions about TIME\n\nand other times you will make decisions\n\nabout the COLOR or ANGLE of the shapes.\n\nYour decision will be one of two options: SAME or DIFFERENT\n\nPress the 2 button for SAME\n\nand the 3 button for DIFFERENT.\n\nPress the 2 button now to continue.');
-    instruct2 = sprintf('During the experiment the task\n\nmay change from time to time.\n\nTo indicate your task, there will be\n\n the word TIME, COLOR, or ANGLE\n\ndisplayed on the screen for 1 second\n\n after each rest period.\n\nPress the 3 button to begin.');
+    instruct1 = sprintf('For this experiment you will\n\nsee two shapes on the screen and\n\nyou will make decisions based on your current task.\n\nSometimes you will make decisions about TIME\n\nand other times you will make decisions\n\nabout the ANGLE of the shapes.\n\nYour decision will be one of two options: SAME or DIFFERENT\n\nPress the 2 button for SAME\n\nand the 3 button for DIFFERENT.\n\nPress the 2 button now to continue.');
+    instruct2 = sprintf('During the experiment the task\n\nmay change from time to time.\n\nTo indicate your task, there will be\n\n the word TIME, or ANGLE\n\ndisplayed on the screen for 1 second\n\n after each rest period.\n\nPress the 3 button to begin.');
     ShowInstructions(instruct1,'2@');
     ShowInstructions(instruct2,'3#');
     s.expStartTime = WaitForScannerStart;
@@ -169,7 +157,7 @@ try %Use try catch loops for elegant error handling with PTB
         %[s.leftRight(b,:), s.sameDiffSJ(b,:), s.sameDiffCL(b,:), s.sameDiffOR(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[0 1],[0 1],[0 1]);
         if strcmpi(s.tasks{b},'SJ') | strcmpi(s.tasks{b},'TO')
             if strcmpi(runtype,'test')
-                [s.leftRight(b,:), s.firstLastSJ(b,:), s.sameDiffSJ(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0 0 0]);
+                [s.leftRight(b,:), s.firstLastSJ(b,:), s.sameDiffSJ(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0 0 1]);
             else
                 [s.leftRight(b,:),s.firstLastSJ(b,:) , s.sameDiffSJ(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0]);
                 s.sameDiffSJ(b,:) = 0;
@@ -178,7 +166,7 @@ try %Use try catch loops for elegant error handling with PTB
             s.sameDiffOR(b,1:s.ntrials) = 1;
         elseif strcmpi(s.tasks{b},'CL')
             if strcmpi(runtype,'test')
-                [s.leftRight(b,:),s.firstLastSJ(b,:), s.sameDiffCL(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0 0 0]);
+                [s.leftRight(b,:),s.firstLastSJ(b,:), s.sameDiffCL(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0 0 1]);
             else
                 [s.leftRight(b,:),s.firstLastSJ(b,:), s.sameDiffCL(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0]);
                 s.sameDiffCL(b,:) = 0; 
@@ -187,7 +175,7 @@ try %Use try catch loops for elegant error handling with PTB
             s.sameDiffOR(b,1:s.ntrials) = 1;
         elseif strcmpi(s.tasks{b},'OR')
             if strcmpi(runtype,'test')
-                [s.leftRight(b,:), s.firstLastSJ(b,:), s.sameDiffOR(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1], [1 0],[0 0 0 0]);
+                [s.leftRight(b,:), s.firstLastSJ(b,:), s.sameDiffOR(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1], [1 0],[0 0 0 1]);
             else
                 [s.leftRight(b,:),s.firstLastSJ(b,:), s.sameDiffOR(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1], [1 0],[0 0]);
                 s.sameDiffOR(b,:) = 0;
@@ -215,34 +203,10 @@ try %Use try catch loops for elegant error handling with PTB
                         s.SJ = psychAdapt(cmd,'model',s.SJ,'acc',s.acc(b,i),'stimulusValue',s.SJ.stimVal); 
                     else % if stimulus levels were not different
                         if strcmpi(cmd, 'test') % only get this far if in testing (fMRI mode)
-                            if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
-                                s.SJ = psychAdapt(cmd,'model',s.SJ,'acc',0,'stimulusValue',s.SJ.test.threshGuess);
-                            end
-                        end
-                    end
-                end
-            elseif strcmpi(s.tasks{b},'TO')
-                %s.randAngle(b,i) = randi([s.angleMin, s.angleMax]);
-                s.randAngle(b,i) = 0;
-                s.SOA(b,i) = s.TO.stimVal;
-                s.rectColors(b,i).colorMat = [s.redColor; s.redColor;];
-                s.rectAngles(b,i).angles = [s.randAngle(b,i) s.randAngle(b,i)];
-                [s.RT(b,i), s.acc(b,i), s.response(b,i), s.TrialOnsetTime(b,i), s.trialOffTime(b,i)] = ShowStimulus(params, s.sameDiffSJ(b,i), s.sameDiffCL(b,i), s.sameDiffOR(b,i), s.leftRight(b,i), s.rectColors(b,i).colorMat, s.rectAngles(b,i).angles, s.SOA(b,i), s.respTimeOut, s.maxTrialSecs, s.tasks(b), s.firstLastSJ(b,i));
-                s.TrialOnsetTime(b,i) = s.TrialOnsetTime(b,i) - s.expStartTime;
-                s.trialOffTime(b,i) = s.trialOffTime(b,i) - s.expStartTime;
-                if (s.RT(b,i) < 999)
-                    if strcmpi(runtype,'train')
-                        cmd = 'train';
-                    else
-                        cmd = 'test';
-                    end
-                    if s.sameDiffSJ(b,i) == 0 % if stimulus levels were different
-                        s.TO = psychAdapt(cmd,'model',s.TO,'acc',s.acc(b,i),'stimulusValue',s.TO.stimVal);
-                    else % if stimulus levels were not different
-                        if strcmpi(cmd, 'test') % only get this far if in testing (fMRI mode)
-                            if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
-                                s.TO = psychAdapt(cmd,'model',s.TO,'acc',0,'stimulusValue',s.TO.test.threshGuess);
-                            end
+                            s.SJ = psychAdapt(cmd,'model',s.SJ,'acc',s.acc(b,i),'stimulusValue',0.5);
+                            %if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
+                                
+                            %end
                         end
                     end
                 end
@@ -268,9 +232,10 @@ try %Use try catch loops for elegant error handling with PTB
                         s.CL = psychAdapt(cmd,'model',s.CL,'acc',s.acc(b,i),'stimulusValue',s.CL.stimVal); 
                     else % if stimulus levels were not different
                         if strcmpi(cmd, 'test') % only get this far if in testing (fMRI mode)
-                            if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
-                                s.CL = psychAdapt(cmd,'model',s.CL,'acc',s.acc(b,i),'stimulusValue',s.CL.test.threshGuess);
-                            end
+                            s.CL = psychAdapt(cmd,'model',s.CL,'acc',s.acc(b,i),'stimulusValue',s.redColor(1));
+                            %if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
+                                
+                            %end
                         end
                     end
                 end
@@ -297,9 +262,10 @@ try %Use try catch loops for elegant error handling with PTB
                         s.OR = psychAdapt(cmd,'model',s.OR,'acc',s.acc(b,i),'stimulusValue',s.OR.stimVal); 
                     else % if stimulus levels were not different
                         if strcmpi(cmd, 'test') % only get this far if in testing (fMRI mode)
-                            if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
-                                s.OR = psychAdapt(cmd,'model',s.OR,'acc',s.acc(b,i),'stimulusValue',s.OR.test.threshGuess);
-                            end
+                            s.OR = psychAdapt(cmd,'model',s.OR,'acc',s.acc(b,i),'stimulusValue',0);
+                            %if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
+                                
+                            %end
                         end
                     end
                 end
@@ -351,12 +317,10 @@ try %Use try catch loops for elegant error handling with PTB
     if strcmpi(runtype,'train')
         psychAdapt('plotTraining','model',s.SJ);
         psychAdapt('plotTraining','model',s.OR);
-        psychAdapt('plotTraining','model',s.CL);
     elseif strcmpi(runtype,'test')
         psychAdapt('plotTesting','model',s.SJ);
         psychAdapt('plotTesting','model',s.OR);
-        psychAdapt('plotTesting','model',s.CL);
-        disp(sprintf('\n\n** Accuracies **\n\nSJ: %2.2f, CL: %2.2f, OR: %2.2f', s.SJ.test.testAcc, s.CL.test.testAcc, s.OR.test.testAcc));
+        disp(sprintf('\n\n** Accuracies **\n\nSJ: %2.2f, OR: %2.2f', s.SJ.test.testAcc, s.OR.test.testAcc));
     end
     
     

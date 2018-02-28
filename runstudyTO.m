@@ -28,7 +28,7 @@ try %Use try catch loops for elegant error handling with PTB
     s.nRestFrames = 900-1; % THIS IS FOR RUNNING SUBJECTS
     %s.nRestFrames = 300-1; %for testing on myself
     s.respTimeOut = 1.1;
-    s.maxTrialSecs = 2;
+    s.maxTrialSecs = 1.8;
     s.trimTime = 0;
     s.redColor = [.8 0 0];
     s.grnColor = [0 .8 0];
@@ -47,9 +47,9 @@ try %Use try catch loops for elegant error handling with PTB
     %HideCursor(params.screen);
     Screen('TextSize', params.win, 28);
     xplaces = linspace(0, params.maxXpixels,5);
-    rectPad = 200;
+    rectPad = 300;
     %rectSize = xplaces(3) - xplaces(1)-(rectPad*2);
-    posXs = [params.maxXpixels*0.35 params.maxXpixels*0.5 params.maxXpixels*0.65];%X positions for the stimuli
+    posXs = [params.maxXpixels*0.3 params.maxXpixels*0.5 params.maxXpixels*0.7];%X positions for the stimuli
     posYs = [params.maxYpixels*0.5 params.maxYpixels*0.5];%Y positions for the stimuli
     rectSize = round((posXs(3) - posXs(1))-rectPad);
     baseRect = [0 0 rectSize rectSize]; %make a PTB rect var
@@ -57,7 +57,7 @@ try %Use try catch loops for elegant error handling with PTB
     s.SOA = 1;%%IMPORTANT
     s.angleMin = -90;
     s.angleMax = 90;
-    params.stimDur = 45; %30 frames = 500 msec
+    params.stimDur = 30; %30 frames = 500 msec
     params.dotType = 2;%fixation dot type
     params.dotSize = 10;%size of circle
     params.dotdur = 15;%duration of fixation alone, at beginning of trials
@@ -78,9 +78,9 @@ try %Use try catch loops for elegant error handling with PTB
     % For psychAdapt:
     %SJ
     targetAcc = 0.75;
-    to_threshGuess = 0.2;
-    to_minVal = 0.1;
-    to_maxVal = 0.49;
+    to_threshGuess = 0.1;
+    to_minVal = 0.01;
+    to_maxVal = 0.4;
     if strcmpi(runtype,'train')
         s.trainTrials = 32;
         s.nRestFrames = 300-1;
@@ -102,14 +102,14 @@ try %Use try catch loops for elegant error handling with PTB
         s.TO = psychAdapt('computeThreshold', 'model', l.s.TO);
     end
     if ~strcmpi(runtype,'train') %if any run but the t1 scan (initial titration)
-        s.nblockseach = 5;
+        s.nblockseach = 4;
         vals = {'TO'}; 
         s.tasks = [];
         for i = 1:s.nblockseach
             s.tasks = [s.tasks repmat(vals(randperm(size(vals,2))),1,1)];
         end
         s.nblocks = length(s.tasks);
-        s.ntrials = 16;%trials per block, ntrials must be even
+        s.ntrials = 32;%trials per block, ntrials must be even
     else %else, do 32 trials of each task
         s.ntrials = s.trainTrials;
         s.nblocks = 1;
@@ -144,7 +144,7 @@ try %Use try catch loops for elegant error handling with PTB
         %[s.leftRight(b,:), s.sameDiffSJ(b,:), s.sameDiffCL(b,:), s.sameDiffOR(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[0 1],[0 1],[0 1]);
         if strcmpi(s.tasks{b},'SJ') | strcmpi(s.tasks{b},'TO')
             if strcmpi(runtype,'test')
-                [s.leftRight(b,:), s.firstLastSJ(b,:), s.sameDiffSJ(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0 0 0]);
+                [s.leftRight(b,:), s.firstLastSJ(b,:), s.sameDiffSJ(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0 0 1]);
             else
                 [s.leftRight(b,:),s.firstLastSJ(b,:) , s.sameDiffSJ(b,:)] = BalanceTrials(s.ntrials,doRand,[0 1],[1 0],[0 0]);
                 s.sameDiffSJ(b,:) = 0;
@@ -190,9 +190,10 @@ try %Use try catch loops for elegant error handling with PTB
                         s.SJ = psychAdapt(cmd,'model',s.SJ,'acc',s.acc(b,i),'stimulusValue',s.SJ.stimVal); 
                     else % if stimulus levels were not different
                         if strcmpi(cmd, 'test') % only get this far if in testing (fMRI mode)
-                            if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
-                                s.SJ = psychAdapt(cmd,'model',s.SJ,'acc',0,'stimulusValue',s.SJ.test.threshGuess);
-                            end
+                            s.SJ = psychAdapt(cmd,'model',s.SJ,'acc',s.acc(b,i),'stimulusValue',0.5);
+                            %if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
+                                
+                            %end
                         end
                     end
                 end
@@ -215,9 +216,10 @@ try %Use try catch loops for elegant error handling with PTB
                         s.TO = psychAdapt(cmd,'model',s.TO,'acc',s.acc(b,i),'stimulusValue',s.TO.stimVal);
                     else % if stimulus levels were not different
                         if strcmpi(cmd, 'test') % only get this far if in testing (fMRI mode)
-                            if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
-                                s.TO = psychAdapt(cmd,'model',s.TO,'acc',0,'stimulusValue',s.TO.test.threshGuess);
-                            end
+                            s.TO = psychAdapt(cmd,'model',s.TO,'acc',0,'stimulusValue',0.5);
+                            %if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
+                                
+                            %end
                         end
                     end
                 end
