@@ -78,9 +78,9 @@ try %Use try catch loops for elegant error handling with PTB
     % For psychAdapt:
     %SJ
     targetAcc = 0.75;
-    to_threshGuess = 0.1;
-    to_minVal = 0.01;
-    to_maxVal = 0.4;
+    to_threshGuess = 0.3;
+    to_minVal = 0.1;
+    to_maxVal = 0.49;
     if strcmpi(runtype,'train')
         s.trainTrials = 32;
         s.nRestFrames = 300-1;
@@ -102,7 +102,7 @@ try %Use try catch loops for elegant error handling with PTB
         s.TO = psychAdapt('computeThreshold', 'model', l.s.TO);
     end
     if ~strcmpi(runtype,'train') %if any run but the t1 scan (initial titration)
-        s.nblockseach = 4;
+        s.nblockseach = 5;
         vals = {'TO'}; 
         s.tasks = [];
         for i = 1:s.nblockseach
@@ -200,6 +200,9 @@ try %Use try catch loops for elegant error handling with PTB
             elseif strcmpi(s.tasks{b},'TO')
                 %s.randAngle(b,i) = randi([s.angleMin, s.angleMax]);
                 s.randAngle(b,i) = 0;
+                if isnan(s.TO.stimVal)
+                    s.TO.stimVal = to_threshGuess;
+                end
                 s.SOA(b,i) = s.TO.stimVal;
                 s.rectColors(b,i).colorMat = [s.redColor; s.redColor;];
                 s.rectAngles(b,i).angles = [s.randAngle(b,i) s.randAngle(b,i)];
@@ -216,7 +219,7 @@ try %Use try catch loops for elegant error handling with PTB
                         s.TO = psychAdapt(cmd,'model',s.TO,'acc',s.acc(b,i),'stimulusValue',s.TO.stimVal);
                     else % if stimulus levels were not different
                         if strcmpi(cmd, 'test') % only get this far if in testing (fMRI mode)
-                            s.TO = psychAdapt(cmd,'model',s.TO,'acc',0,'stimulusValue',0.5);
+                            %s.TO = psychAdapt(cmd,'model',s.TO,'acc',s.acc(b,i),'stimulusValue',0.5);
                             %if s.acc(b,i) == 0 % if subj got this trial wrong when stimului were the same, penalize them for it (catch trials)
                                 
                             %end

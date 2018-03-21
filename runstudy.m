@@ -28,7 +28,7 @@ try %Use try catch loops for elegant error handling with PTB
     s.nRestFrames = 900-1; % THIS IS FOR RUNNING SUBJECTS
     %s.nRestFrames = 300-1; %for testing on myself
     s.respTimeOut = 1.1;
-    s.maxTrialSecs = 1.8;
+    s.maxTrialSecs = 2;
     s.trimTime = 0;
     s.redColor = [.8 0 0];
     s.grnColor = [0 .8 0];
@@ -57,7 +57,7 @@ try %Use try catch loops for elegant error handling with PTB
     s.SOA = 1;%%IMPORTANT
     s.angleMin = -90;
     s.angleMax = 90;
-    params.stimDur = 30; %30 frames = 500 msec
+    params.stimDur = 40; %30 frames = 500 msec
     params.dotType = 2;%fixation dot type
     params.dotSize = 10;%size of circle
     params.dotdur = 15;%duration of fixation alone, at beginning of trials
@@ -78,13 +78,13 @@ try %Use try catch loops for elegant error handling with PTB
     % For psychAdapt:
     %SJ
     targetAcc = 0.75;
-    sj_threshGuess = 0.2;
-    sj_minVal = 0.01;
+    sj_threshGuess = 0.3;
+    sj_minVal = 0.1;
     sj_maxVal = 0.49; %sj comparison value is set to 0.5, so cant go above that
     %OR
     or_threshGuess = 3;
     or_minVal = 0.1;
-    or_maxVal = 6;
+    or_maxVal = 8;
     if strcmpi(runtype,'train')
         s.trainTrials = 32;
         s.nRestFrames = 300-1;
@@ -187,6 +187,9 @@ try %Use try catch loops for elegant error handling with PTB
             if strcmpi(s.tasks{b},'SJ')
                 %s.randAngle(b,i) = randi([s.angleMin, s.angleMax]);
                 s.randAngle(b,i) = 0;
+                if isnan(s.SJ.stimVal)
+                    s.SJ.stimVal = sj_threshGuess;
+                end
                 s.SOA(b,i) = s.SJ.stimVal; 
                 s.rectColors(b,i).colorMat = [s.redColor; s.redColor;];
                 s.rectAngles(b,i).angles = [s.randAngle(b,i) s.randAngle(b,i)];
@@ -247,6 +250,9 @@ try %Use try catch loops for elegant error handling with PTB
                 s.SOA(b,i) = defaultSOA;
                 s.rectColors(b,i).colorMat = [s.redColor; s.redColor;];
                 %s.rectAngles(b,i).angles = [s.randAngle(b,i) s.randAngle(b,i)-s.OR.stimVal];
+                if isnan(s.OR.stimVal)
+                    s.OR.stimVal = or_threshGuess;
+                end
                 s.rectAngles(b,i).angles = [s.randAngle(b,i) s.randAngle(b,i)-s.OR.stimVal];
                 [s.RT(b,i), s.acc(b,i), s.response(b,i), s.TrialOnsetTime(b,i), s.trialOffTime(b,i)] = ShowStimulus(params, s.sameDiffSJ(b,i), s.sameDiffCL(b,i), s.sameDiffOR(b,i), s.leftRight(b,i), s.rectColors(b,i).colorMat, s.rectAngles(b,i).angles, s.SOA(b,i), s.respTimeOut, s.maxTrialSecs, s.tasks(b),s.firstLastSJ(b,i));
                 s.TrialOnsetTime(b,i) = s.TrialOnsetTime(b,i) - s.expStartTime;
@@ -429,14 +435,14 @@ end
             SOA = b1;
             b2 = b1;
         else
-            %{
+          
             if firstLast
                 b2 = b1+SOA;
             else
                 b2 = b1-SOA;
             end
-            %}
-            b2 = b1+SOA;
+            
+            %b2 = b1+SOA;
         end
         if sameCL
             rectColors(2,:) = rectColors(1,:);

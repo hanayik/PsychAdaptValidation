@@ -116,6 +116,7 @@ switch cmd
         missW = targetAcc; %taret acc can't be less than .50
         hitW = 1-targetAcc;
         trainW = 0;
+        CI = 0.95;
         trainAcc = pa.train.acc;
         testAcc = pa.test.acc;
         allAcc = [trainAcc testAcc]; 
@@ -142,11 +143,7 @@ switch cmd
         %[b,~,stats] = glmfit(stimVals,[acc n],'binomial','link','logit'); % no weights 
         yfit = glmval(b,stimVals,'logit'); %only needed if plotting
         [yfits, I] = sort(yfit); %only needed if plotting
-        if b(2) < 0
-            threshGuess = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + b(1)) / abs(b(2));
-        else
-            threshGuess = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + abs(b(1))) / b(2);
-        end
+        threshGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(b(1))) / b(2);
         if threshGuess > pa.test.max
             threshGuess = pa.test.max;
         end
@@ -158,6 +155,35 @@ switch cmd
         title(pa.test.name);
         hold on;
         plot(threshGuess,pa.test.targetAcc,'*k');
+        if CI >0.5
+            z = norminv([(1-CI)/2 (CI-((1-CI)/2))]);
+        else
+            z = norminv([(CI-((1-CI)/2)) (1-CI)/2]);
+        end
+        %padj ± z * sqrt(padj(1- padj)/nadj)
+        upperCI = b+(z(2)*stats.se);
+        lowerCI = b-(z(2)*stats.se);
+        %upperCI = b+(sqrt(length(allVals))*stats.se);
+        %lowerCI = b-(sqrt(length(allVals))*stats.se);
+        yfitUpper = glmval(upperCI,stimVals,'logit'); %only needed if plotting
+        yfitLower = glmval(lowerCI,stimVals,'logit');
+        [yfitsUpper, upperI] = sort(yfitUpper); %only needed if plotting
+        [yfitsLower, lowerI] = sort(yfitLower);
+        plot(stimVals(upperI),yfitsUpper./n,'b:','LineWidth',2);
+        plot(stimVals(lowerI),yfitsLower./n,'b:','LineWidth',2);
+        upperGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + upperCI(1)) / upperCI(2);
+        lowerGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + lowerCI(1)) / lowerCI(2);
+        disp(['upper guess: ' num2str(upperGuess)]);
+        disp(['lower guess: ' num2str(lowerGuess)]);
+        disp(['thresh guess: ' num2str(threshGuess)]);
+        if upperGuess > pa.test.max
+            upperGuess = pa.test.max;
+        end
+        if lowerGuess < pa.test.min
+            lowerGuess = pa.test.min;
+        end
+        plot(upperGuess,pa.test.targetAcc,'*k');
+        plot(lowerGuess,pa.test.targetAcc,'*r');
         x = [threshGuess threshGuess];
         y = [0 pa.train.targetAcc];
         line(x,y,'Color','red','LineStyle','--')
@@ -182,6 +208,8 @@ targetAcc = pa.test.targetAcc;
 missW = targetAcc; %taret acc can't be less than .50
 hitW = 1-targetAcc;
 trainW = 0;
+CI = 0.95;
+CIspread = 5;
 testingFactor = 0;
 trainAcc = pa.train.acc;
 testAcc = pa.test.acc;
@@ -203,21 +231,45 @@ stimVals = allVals(aI)';
 n = ones(size(acc));
 [b,~,stats] = glmfit(stimVals,[acc n],'binomial','link','logit','weights',w(aI));
 pa.test.betaVals = [pa.test.betaVals b];
-if b(2) < 0
-    pa.test.threshGuess = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + b(1)) / abs(b(2));
-else
-    pa.test.threshGuess = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + abs(b(1))) / b(2);
-end
-if pa.test.threshGuess < pa.test.min % if weird values from logistic fit, make a sensible random value
-    pa.test.threshGuess = pa.test.min + (pa.test.max-pa.test.min).*rand(1,1);
-else
-    pa.test.threshGuess = pa.test.min + (pa.test.max-pa.test.min).*rand(1,1);
-end
+pa.test.threshGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(b(1))) / b(2);
 threshGuess = pa.test.threshGuess;
-if pa.test.testAcc < pa.test.targetAcc
-    pa.test.stimVal = threshGuess + (pa.test.max-threshGuess).*rand(1,1); % make easier
+%pa.test.sdGuess = pa.test.threshGuess * 0.5;
+if CI >0.5
+    z = norminv([(1-CI)/2 (CI-((1-CI)/2))]);
 else
-    pa.test.stimVal = threshGuess - (threshGuess-pa.test.min).*rand(1,1); % make harder
+    z = norminv([(CI-((1-CI)/2)) (1-CI)/2]);
+end
+%padj ± z * sqrt(padj(1- padj)/nadj) %possible other method
+upperCI = b+(z(2)*stats.se);
+lowerCI = b-(z(2)*stats.se);
+pa.test.upperGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + upperCI(1)) / upperCI(2);
+pa.test.lowerGuess = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + lowerCI(1)) / lowerCI(2);
+if pa.test.upperGuess > pa.test.max
+    pa.test.upperGuess = pa.test.max;
+end
+if pa.test.lowerGuess < pa.test.min
+    pa.test.lowerGuess = pa.test.min;
+end
+lowerGuess = pa.test.lowerGuess;
+upperGuess = pa.test.upperGuess;
+%R = normrnd(pa.test.threshGuessAtTargetAcc, pa.test.sdGuess, [1 pa.train.probeLength]);
+%harderStims = R(R<pa.test.threshGuessAtTargetAcc);
+%easierStims = R(R>pa.test.threshGuessAtTargetAcc);
+%R = (pa.test.lowerGuess-pa.test.upperGuess).*rand(pa.train.probeLength,1) + pa.test.upperGuess;
+% R = linspace(pa.test.upperGuess,pa.test.lowerGuess,pa.train.probeLength);
+% harderStims = R(R<pa.test.threshGuess);
+% easierStims = R(R>pa.test.threshGuess);
+%easierStims = linspace(pa.test.lowerGuess,pa.test.threshGuess,CIspread);
+%harderStims = linspace(pa.test.threshGuess,pa.test.upperGuess,CIspread);
+
+if pa.test.testAcc < pa.test.targetAcc
+    pa.test.stimVal = lowerGuess + (threshGuess-lowerGuess).*rand(1,1);
+    %pa.test.stimVal = pa.test.lowerGuess;
+    %pa.test.stimVal = easierStims(randi([1 length(easierStims)]));
+else
+    pa.test.stimVal = threshGuess + (upperGuess-threshGuess).*rand(1,1);
+    %pa.test.stimVal = pa.test.upperGuess;
+    %pa.test.stimVal = harderStims(randi([1 length(harderStims)]));
 end
 if pa.test.stimVal > pa.test.max
     pa.test.stimVal = pa.test.max;
