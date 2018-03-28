@@ -47,7 +47,7 @@ try %Use try catch loops for elegant error handling with PTB
     %HideCursor(params.screen);
     Screen('TextSize', params.win, 28);
     xplaces = linspace(0, params.maxXpixels,5);
-    rectPad = 300;
+    rectPad = 150; %300 for iMac
     %rectSize = xplaces(3) - xplaces(1)-(rectPad*2);
     posXs = [params.maxXpixels*0.3 params.maxXpixels*0.5 params.maxXpixels*0.7];%X positions for the stimuli
     posYs = [params.maxYpixels*0.5 params.maxYpixels*0.5];%Y positions for the stimuli

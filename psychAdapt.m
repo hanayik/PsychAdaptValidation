@@ -113,9 +113,11 @@ switch cmd
     case 'plotTesting' %includes data from training plot too!
         pa = cell2mat(varargin(find(strcmp(varargin, 'model'))+1));
         targetAcc = pa.test.targetAcc;
-        missW = targetAcc; %taret acc can't be less than .50
-        hitW = 1-targetAcc;
-        trainW = 0;
+        %missW = targetAcc; %taret acc can't be less than .50
+        %hitW = 1-targetAcc;
+        missW = 1; %taret acc can't be less than .50
+        hitW = 1;
+        trainW = 1;
         trainAcc = pa.train.acc;
         testAcc = pa.test.acc;
         allAcc = [trainAcc testAcc]; 
@@ -179,9 +181,11 @@ function pa = updateTestingModel(pa)
 %hitWeightFactor = 10;
 %missWeightFactor = hitWeightFactor - (hitWeightFactor*pa.test.targetAcc);
 targetAcc = pa.test.targetAcc;
-missW = targetAcc; %taret acc can't be less than .50
-hitW = 1-targetAcc;
-trainW = 0;
+missW = 1; %taret acc can't be less than .50
+hitW = 1;
+%missW = targetAcc; %taret acc can't be less than .50
+%hitW = 1-targetAcc;
+trainW = 1;
 testingFactor = 0;
 trainAcc = pa.train.acc;
 testAcc = pa.test.acc;
@@ -205,19 +209,27 @@ n = ones(size(acc));
 pa.test.betaVals = [pa.test.betaVals b];
 if b(2) < 0
     pa.test.threshGuess = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + b(1)) / abs(b(2));
+    midGuess = (log(0.5/(1-0.5)) + b(1)) / abs(b(2));
 else
     pa.test.threshGuess = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + abs(b(1))) / b(2);
+    midGuess = (log(0.5/(1-0.5)) + abs(b(1))) / b(2);
 end
 if pa.test.threshGuess < pa.test.min % if weird values from logistic fit, make a sensible random value
     pa.test.threshGuess = pa.test.min + (pa.test.max-pa.test.min).*rand(1,1);
-else
+elseif pa.test.threshGuess > pa.test.max
     pa.test.threshGuess = pa.test.min + (pa.test.max-pa.test.min).*rand(1,1);
 end
 threshGuess = pa.test.threshGuess;
+if midGuess > threshGuess
+    midGuess = pa.test.max/2;
+end
+if midGuess < pa.test.min
+    midGuess = pa.test.min;
+end
 if pa.test.testAcc < pa.test.targetAcc
     pa.test.stimVal = threshGuess + (pa.test.max-threshGuess).*rand(1,1); % make easier
 else
-    pa.test.stimVal = threshGuess - (threshGuess-pa.test.min).*rand(1,1); % make harder
+    pa.test.stimVal = threshGuess - (threshGuess-midGuess).*rand(1,1); % make harder
 end
 if pa.test.stimVal > pa.test.max
     pa.test.stimVal = pa.test.max;
@@ -235,7 +247,11 @@ stimVals = pa.train.stimulusVals(aI)';
 n = ones(size(acc));
 b = glmfit(stimVals,[acc n],'binomial','link','logit');
 yfit = glmval(b,stimVals,'logit');
-pa.test.stimVal = (log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(b(1))) / b(2);
+if b(2) < 0
+    pa.test.stimVal = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + b(1)) / abs(b(2));%(log(pa.test.targetAcc/(1-pa.test.targetAcc)) + abs(b(1))) / b(2);
+else
+    pa.test.stimVal = (log(pa.train.targetAcc/(1-pa.train.targetAcc)) + abs(b(1))) / b(2);
+end
 end %end computeTrainingThreshold
 
 
