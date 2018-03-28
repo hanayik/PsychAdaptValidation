@@ -81,10 +81,12 @@ try %Use try catch loops for elegant error handling with PTB
     sj_threshGuess = 0.3;
     sj_minVal = 0.1;
     sj_maxVal = 0.49; %sj comparison value is set to 0.5, so cant go above that
+    sj_midval = (sj_maxVal-sj_minVal)/2;
     %OR
     or_threshGuess = 3;
     or_minVal = 0.1;
     or_maxVal = 8;
+    or_midval = (or_maxVal-or_minVal)/2;
     if strcmpi(runtype,'train')
         s.trainTrials = 32;
         s.nRestFrames = 300-1;
@@ -212,7 +214,10 @@ try %Use try catch loops for elegant error handling with PTB
                             %end
                         end
                     end
+                else
+                    s.SJ = psychAdapt(cmd,'model',s.SJ,'acc',0,'stimulusValue',sj_midval);
                 end
+                
             elseif strcmpi(s.tasks{b},'CL')
                 defaultSOA = s.SJ.train.min;
                 %s.randAngle(b,i) = randi([s.angleMin, s.angleMax]);
@@ -274,7 +279,10 @@ try %Use try catch loops for elegant error handling with PTB
                             %end
                         end
                     end
+                else
+                    s.OR = psychAdapt(cmd,'model',s.OR,'acc',0,'stimulusValue',or_midval);
                 end
+                
             end
             s.trialDuration(b,i) = s.trialOffTime(b,i) - s.TrialOnsetTime(b,i);
             if (s.trialDuration(b,i) > s.maxTrialSecs)
